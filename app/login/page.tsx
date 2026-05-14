@@ -18,21 +18,39 @@ export default function LoginPage() {
   const { itemCount } = useCart()
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault()
+  setError("")
+  setIsLoading(true)
 
-    const result = await login(email, password)
-    
-    if (result.success) {
-      router.push("/")
-    } else {
-      setError(result.error || "Login failed")
+  try {
+    const users = JSON.parse(localStorage.getItem("users") || "[]")
+
+    const user = users.find(
+      (u: any) => u.email === email && u.password === password
+    )
+
+    if (!user) {
+      setError("Invalid email or password")
+      setIsLoading(false)
+      return
     }
-    
+
+    login(user)
+
+if (rememberMe) {
+  localStorage.setItem("currentUser", JSON.stringify(user))
+} else {
+  sessionStorage.setItem("currentUser", JSON.stringify(user))
+}
+
+router.push("/")
+  } catch (err) {
+    setError("Login failed")
+  } finally {
     setIsLoading(false)
   }
+}
 
   const handleSocialLogin = (provider: string) => {
     alert(`${provider} login is not available in demo mode. Please use email login with:\n\nEmail: john.delacruz@email.com\nPassword: demo123`)
@@ -75,12 +93,15 @@ export default function LoginPage() {
             </div>
 
             {/* Login Button */}
-            <button className="bg-[#b8831d] hover:bg-[#9a6e18] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-colors font-medium">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="hidden sm:inline">Login</span>
-            </button>
+            <Link
+              href="/register"
+              className="bg-[#b8831d] hover:bg-[#9a6e18] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-colors font-medium"
+>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3" />
+          </svg>
+          <span className="hidden sm:inline">Register</span>
+          </Link>
           </div>
         </div>
       </nav>

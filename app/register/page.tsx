@@ -1,11 +1,79 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+
 
 export default function TourBookingRegistration() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [location, setLocation] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault()
+  setError("")
+
+
+  // basic validation
+  if (!agreedToTerms) {
+    setError("You must agree to the terms and conditions")
+    setIsLoading(false)
+    return
+  }
+
+  if (password !== confirmPassword) {
+    setError("Passwords do not match")
+    setIsLoading(false)
+    return
+  }
+
+  if (!fullName || !email || !phone || !location || !password || !confirmPassword) {
+  setError("Please fill in all fields")
+  setIsLoading(false)
+  return
+}
+
+  setIsLoading(true)
+
+  try {
+  const users = JSON.parse(localStorage.getItem("users") || "[]")
+
+  const existingUser = users.find((u: any) => u.email === email)
+  if (existingUser) {
+    setError("Email already exists")
+    setIsLoading(false)
+    return
+  }
+
+  const newUser = {
+    fullName,
+    email,
+    phone,
+    location,
+    password,
+  }
+
+  users.push(newUser)
+  localStorage.setItem("users", JSON.stringify(users))
+
+  router.push("/login")
+} catch (err) {
+  setError("Something went wrong")
+  setIsLoading(false)
+} finally {
+  setIsLoading(false)
+  }
+ }
 
   return (
     <div className="min-h-screen bg-[#f8f6f0]">
@@ -48,12 +116,14 @@ export default function TourBookingRegistration() {
             </div>
 
             {/* Login Button */}
-            <button className="bg-[#b8831d] hover:bg-[#9a6e18] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-colors font-medium">
+            <Link
+  href="/login"
+  className="bg-[#b8831d] hover:bg-[#9a6e18] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-colors font-medium">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <span className="hidden sm:inline">Login</span>
-          </button>
+          </Link>
           </div>
         </div>
       </nav>
@@ -148,7 +218,12 @@ export default function TourBookingRegistration() {
             </div>
 
             {/* Form */}
-            <form className="space-y-5">
+            {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+             {error}
+             </div>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Full Name */}
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -157,9 +232,12 @@ export default function TourBookingRegistration() {
                   </svg>
                 </div>
                 <input
-                  type="text"
-                  placeholder="Enter your full name"
-                  className="w-full h-[50px] pl-12 pr-4 border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b8831d]/30 focus:border-[#b8831d] transition-all"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                    required
+                   className="w-full h-[50px] pl-12 pr-4 border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b8831d]/30 focus:border-[#b8831d] transition-all"
                 />
               </div>
 
@@ -172,8 +250,12 @@ export default function TourBookingRegistration() {
                 </div>
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
+                  required
                   className="w-full h-[50px] pl-12 pr-4 border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b8831d]/30 focus:border-[#b8831d] transition-all"
+                
                 />
               </div>
 
@@ -186,7 +268,10 @@ export default function TourBookingRegistration() {
                 </div>
                 <input
                   type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   placeholder="Enter your phone number"
+                  required
                   className="w-full h-[50px] pl-12 pr-4 border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b8831d]/30 focus:border-[#b8831d] transition-all"
                 />
               </div>
@@ -201,7 +286,10 @@ export default function TourBookingRegistration() {
                 </div>
                 <input
                   type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
                   placeholder="Enter your city / province, country"
+                  required
                   className="w-full h-[50px] pl-12 pr-4 border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b8831d]/30 focus:border-[#b8831d] transition-all"
                 />
               </div>
@@ -215,7 +303,10 @@ export default function TourBookingRegistration() {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a password"
+                  required
                   className="w-full h-[50px] pl-12 pr-12 border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b8831d]/30 focus:border-[#b8831d] transition-all"
                 />
                 <button
@@ -245,7 +336,10 @@ export default function TourBookingRegistration() {
                 </div>
                 <input
                   type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
+                  required
                   className="w-full h-[50px] pl-12 pr-12 border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b8831d]/30 focus:border-[#b8831d] transition-all"
                 />
                 <button
@@ -290,21 +384,28 @@ export default function TourBookingRegistration() {
 
               {/* Register Button */}
               <button
-                type="submit"
-                className="w-full h-[50px] bg-[#b8831d] hover:bg-[#9a6e18] text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-[#b8831d]/20"
-              >
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-[50px] bg-[#b8831d] hover:bg-[#9a6e18] text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-[#b8831d]/20"
+>
+                  {isLoading ? (
+                 "Creating account..."
+                 ) : (
+                <>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                Register
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+               </svg>
+              Register
+                </>
+                )}
               </button>
 
               {/* Login Redirect */}
               <p className="text-center text-gray-600">
                 Already have an account?{" "}
-                <a href="#" className="text-[#b8831d] hover:underline font-medium">
+                <Link href="/login" className="text-[#b8831d] hover:underline font-medium">
                   Login here
-                </a>
+                </Link>
               </p>
             </form>
           </div>
